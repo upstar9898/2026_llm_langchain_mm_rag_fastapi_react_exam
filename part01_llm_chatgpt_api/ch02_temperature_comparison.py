@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPEN_API_KEY"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 SYSTEM = (
     "당신은 AI CCTV 보안 분석 시스템입니다. "

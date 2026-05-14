@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPEN_API_KEY"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # ── System Prompt: JSON 출력 형식을 명시합니다 ────────────────────
 # response_format=json_object 를 쓸 때는

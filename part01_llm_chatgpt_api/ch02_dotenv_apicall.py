@@ -11,7 +11,7 @@ from openai import OpenAI
 load_dotenv()
 
 # api key 읽기
-api_key = os.getenv("OPEN_API_KEY")
+api_key = os.getenv("OPENAI_API_KEY")
 model = os.getenv("OPEN_AI_MODEL")
 
 if not api_key:

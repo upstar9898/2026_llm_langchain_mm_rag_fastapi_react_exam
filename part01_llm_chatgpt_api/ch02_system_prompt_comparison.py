@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPEN_API_KEY"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # 모든 실험에서 동일한 user 메시지를 씁니다
 USER_MESSAGE = "새벽 2시에 창고 출입구에서 사람 2명이 탐지됐습니다."
