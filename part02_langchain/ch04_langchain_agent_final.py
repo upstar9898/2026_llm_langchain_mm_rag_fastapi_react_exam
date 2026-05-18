@@ -98,22 +98,6 @@ llm = ChatOpenAI(
     temperature=0,
 )
 
-# LLM에게 제공할 tool 목록
-
-tool_list = ["get_risk_summary", "count_objects_in_zone", "filter_danger_frames"]
-
-# LLM의 tool_calls에는 Tool 이름이 문자열로 들어옵니다.
-# 예:
-#   "name": "get_risk_summary"
-# 그러므로 Tool 이름으로 실제 Tool 객체를 빠르게 찾을 수 있도록
-# 딕셔너리를 만들어 둡니다.
-tools_map = {
-    t.name : t for t in tool_list
-}
-
-# LLM에 Tool 등록 : bind_tools()
-# bind_tools() : LLM에게 사용 가능한 Tool 목록을 알려주는 함수
-llm_with_tools = llm.bind_tools(tool_list)
 
 # ─────────────────────────────────────────────────────────────
 # 2. Tool 함수 정의
@@ -237,6 +221,71 @@ def filter_danger_frames(results_json: str) -> str:
     )
 
 
+# LLM에게 제공할 tool 목록
+
+tool_list = ["get_risk_summary", "count_objects_in_zone", "filter_danger_frames"]
+
+# LLM의 tool_calls에는 Tool 이름이 문자열로 들어옵니다.
+# 예:
+#   "name": "get_risk_summary"
+# 그러므로 Tool 이름으로 실제 Tool 객체를 빠르게 찾을 수 있도록
+# 딕셔너리를 만들어 둡니다.
+tools_map = {t.name: t for t in tool_list}
+
+# LLM에 Tool 등록 : bind_tools()
+# bind_tools() : LLM에게 사용 가능한 Tool 목록을 알려주는 함수
+llm_with_tools = llm.bind_tools(tool_list)
+
+
+# LLM 호출해달라는 tool을 실행해주는 함수
+def execute_tool_calls():
+    """
+    LLM이 요청한 tool_calls를 실제로 실행하고
+    ToolMessage 리스트로 변환합니다.
+    Args:
+        tool_calls:
+            AIMessage.tool_calls에 들어 있는 Tool 호출 요청 목록
+            예:
+            [
+                {
+                    "id": "call_abc123",
+                    "name": "get_risk_summary",
+                    "args": {
+                        "results_json": "..."
+                    }
+                }
+            ]
+    Returns:
+        ToolMessage 리스트
+    """
+
+    tool_messages = []
+
+    for tc in tool_list:
+        tool_name = tc["name"]  # 호출할 tool 이름
+        tool_args = tc["args"]  # tool을 호출할 때 필요한 매개변수
+        # LLM에게 ToolMessage 리스트를 줄 때 어떤 Tool에 대한 호출 결과인지를 알려주기 위해
+        tool_id = tc["id"]
+        
+        # 디버깅 및 수업 시연용 출력입니다.
+        print(f"    🔧 Tool 실행: {tool_name}({list(tool_args.keys())})")
+        
+        # 문자열 tool 이름으로 실제 tool객체를 찾아 실행
+        result = tools_map[tool_name].invoke(tool_args)
+        # Tool 실행 결과를 ToolMessage로 감쌉니다.
+        # content:
+        #   Tool 실행 결과
+        # tool_call_id:
+        #   response.tool_calls 안에 있던 id와 반드시 일치해야 합니다.
+        tool_messages.append(
+            ToolMessage(
+                content=result,
+                tool_call_id=tool_id,
+            )
+        )
+    # ToolMessage 리스트를 반환합니다.
+    return tool_messages
+
 class CCTVLLMAgent:
     """
 
@@ -335,14 +384,23 @@ Tool 선택 기준:
         #      → response.content에 바로 답변 생성
         #
         #   2. Tool이 필요하다고 판단
-        #      → response.tool_calls에 Tool 호출 요청 생성
+        #      → response.tool_calls에 답변 작성을 위해 어떤 툴이 필요한지 Tool 호출 요청 생성
         #
         # 주의:
         #   이 단계에서 Tool이 실제 실행된 것은 아닙니다.
         print("  💭 LLM 판단 중...", end=" ", flush=True)
         response = llm_with_tools.invoke(messages)
         print("완료")
-        
+
+        if response.tool_calls:  # Tool이 필요하다고 판단
+            # LLM이 선택한 Tool 이름을 확인합니다.
+            print(f"  🔍 Tool 선택: {[tc['name'] for tc in response.tool_calls]}")
+
+            # LLM이 답변한 내용을 대화 이력에 추가. (LLM api는 기억이 없다)
+            messages.append(response)
+
+            # LLM이 호출을 요청한 tool을 실제 실행
+            execute_tool_calls(response.tool_calls)
 
 
 if __name__ == "__main__":
@@ -374,9 +432,7 @@ if __name__ == "__main__":
         for i in range(1, 11)
     ]
     # ─────────────────────────────────────────────────────────
-
     # 원본 탐지 프레임 데이터 생성
-
     # ─────────────────────────────────────────────────────────
 
     # frames_json으로 변환될 데이터입니다.
