@@ -223,7 +223,7 @@ def filter_danger_frames(results_json: str) -> str:
 
 # LLM에게 제공할 tool 목록
 
-tool_list = ["get_risk_summary", "count_objects_in_zone", "filter_danger_frames"]
+tool_list = [get_risk_summary, count_objects_in_zone, filter_danger_frames]
 
 # LLM의 tool_calls에는 Tool 이름이 문자열로 들어옵니다.
 # 예:
@@ -238,7 +238,7 @@ llm_with_tools = llm.bind_tools(tool_list)
 
 
 # LLM 호출해달라는 tool을 실행해주는 함수
-def execute_tool_calls():
+def execute_tool_calls(tool_list):
     """
     LLM이 요청한 tool_calls를 실제로 실행하고
     ToolMessage 리스트로 변환합니다.
@@ -420,9 +420,9 @@ Tool 선택 기준:
             print("  ✍️  최종 답변 생성 중...", end=" ", flush=True)
             final_response = llm_with_tools.invoke(messages)
             print("완료")
-            
+
             answer = final_response.content
-        else:    # LLM이 tool 필요 없다고 판단
+        else:  # LLM이 tool 필요 없다고 판단
             # Tool이 필요 없다고 판단한 경우입니다.
             #
             # 예:
@@ -437,15 +437,15 @@ Tool 선택 기준:
         self.scratchpad.append(
             {
                 "query": query,
-                "tool_calls": [
-                    tc["name"]
-                    for tc in response.tool_calls
-                ] if response.tool_calls else [],
+                "tool_calls": [tc["name"] for tc in response.tool_calls]
+                if response.tool_calls
+                else [],
                 "answer": answer,
             }
         )
         return answer
-    
+
+
 if __name__ == "__main__":
     # 테스트 데이터를 만들기 위해 random 모듈을 사용합니다.
     import random
@@ -502,4 +502,29 @@ if __name__ == "__main__":
     results_json = json.dumps(results, ensure_ascii=False)
     frames_json = json.dumps(frames, ensure_ascii=False)
 
+    # Agent 객체 생성
     agent = CCTVLLMAgent(results_json=results_json, frames_json=frames_json)
+
+    # 테스트 질문 목록입니다.
+    queries = [
+        "위험 프레임 요약해줘",
+        "창고 출입구 탐지 카운트 알려줘",
+        "위험 프레임 목록 뽑아줘",
+    ]
+    
+    # 시나리오 실행 시작
+    print("=" * 50)
+    print("  CCTV LLM Agent 시나리오")
+    print("=" * 50)
+    
+    # 질문을 하나씩 실행합니다.
+    for q in queries:
+        answer = agent.run(q)
+        print(f"\n  최종 답변:\n  {answer}\n")
+        print("─" * 50)
+
+    # scratchpad 출력
+    # 어떤 질문에서 어떤 Tool이 선택되었는지 확인합니다.
+    print(f"\n스크래치패드: {len(agent.scratchpad)}개 항목 기록됨")
+    for item in agent.scratchpad:
+        print(f"  [{item['query'][:20]}] → Tool: {item['tool_calls']}")
