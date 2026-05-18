@@ -109,3 +109,98 @@ from langchain_core.messages import (
 # .env 파일에서 OPENAI_API_KEY를 읽어옵니다.
 
 load_dotenv()
+
+# ─────────────────────────────────────────────────────────────
+
+# 1. LLM 초기화
+
+# ─────────────────────────────────────────────────────────────
+
+# ChatOpenAI 객체를 생성합니다.
+
+#
+
+# model:
+
+#   사용할 OpenAI 모델 이름입니다.
+
+#
+
+# temperature:
+
+#   답변의 랜덤성 정도입니다.
+
+#   0에 가까울수록 일관적인 답변을 합니다.
+
+#
+
+# Tool 선택은 매번 흔들리면 수업 시연이 어려우므로
+
+# temperature=0을 권장합니다.
+
+llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    temperature=0,
+)
+
+if __name__ == "__main__":
+    # 테스트 데이터를 만들기 위해 random 모듈을 사용합니다.
+
+    import random
+
+    # 랜덤 결과를 고정합니다.
+
+    # 수업 시연에서는 실행할 때마다 결과가 바뀌지 않는 것이 좋습니다.
+
+    random.seed(42)
+
+    # CCTV 위치 목록입니다.
+
+    LOCATIONS = [
+        "주차장 A",
+        "창고 출입구",
+        "로비",
+        "비상구 복도",
+        "옥상",
+    ]
+    results = [
+        {
+            "frame_id": i,
+            "risk_level": "위험" if i % 4 == 0 else ("주의" if i % 3 == 0 else "정상"),
+            "person_count": random.randint(0, 4),
+            "reason": "심야 다인 탐지" if i % 4 == 0 else "일반",
+            "action": "경비팀 출동" if i % 4 == 0 else "이상 없음",
+        }
+        for i in range(1, 11)
+    ]
+    # ─────────────────────────────────────────────────────────
+
+    # 원본 탐지 프레임 데이터 생성
+
+    # ─────────────────────────────────────────────────────────
+
+    # frames_json으로 변환될 데이터입니다.
+
+    # 이 데이터에는 location, detections, bbox가 들어 있으므로,
+
+    # 특정 구역 탐지 수 집계 Tool에서 사용합니다.
+
+    frames = [
+        {
+            "frame_id": i,
+            "timestamp": f"0{2 if i % 3 == 0 else 1}:{i % 60:02d}",
+            "location": LOCATIONS[i % len(LOCATIONS)],
+            "detections": [
+                {
+                    "class": "person",
+                    "bbox": [10, 10, 100, 100],
+                    "confidence": 0.91,
+                }
+                for _ in range(random.randint(0, 3))
+            ],
+        }
+        for i in range(1, 11)
+    ]
+
+    result_json = json.dumps(results, ensure_ascii=False)
+    frames_json = json.dumps(frames, ensure_ascii=False)
