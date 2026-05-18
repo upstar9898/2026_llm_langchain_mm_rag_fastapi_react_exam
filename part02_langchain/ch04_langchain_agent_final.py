@@ -266,10 +266,10 @@ def execute_tool_calls():
         tool_args = tc["args"]  # tool을 호출할 때 필요한 매개변수
         # LLM에게 ToolMessage 리스트를 줄 때 어떤 Tool에 대한 호출 결과인지를 알려주기 위해
         tool_id = tc["id"]
-        
+
         # 디버깅 및 수업 시연용 출력입니다.
         print(f"    🔧 Tool 실행: {tool_name}({list(tool_args.keys())})")
-        
+
         # 문자열 tool 이름으로 실제 tool객체를 찾아 실행
         result = tools_map[tool_name].invoke(tool_args)
         # Tool 실행 결과를 ToolMessage로 감쌉니다.
@@ -285,6 +285,7 @@ def execute_tool_calls():
         )
     # ToolMessage 리스트를 반환합니다.
     return tool_messages
+
 
 class CCTVLLMAgent:
     """
@@ -400,9 +401,51 @@ Tool 선택 기준:
             messages.append(response)
 
             # LLM이 호출을 요청한 tool을 실제 실행
-            execute_tool_calls(response.tool_calls)
+            tool_messages = execute_tool_calls(response.tool_calls)
 
+            # tool 실행 결과를 대화 이력에 추가
+            messages.extend(tool_messages)
+            # ─────────────────────────────────────────────────
+            # 4단계: 최종 답변 생성
+            # ─────────────────────────────────────────────────
+            #
+            # 이제 LLM은 다음 정보를 모두 볼 수 있습니다.
+            #
+            #   - SystemMessage: 역할과 규칙
+            #   - HumanMessage: 사용자 질문과 데이터
+            #   - AIMessage: LLM이 요청한 Tool 호출
+            #   - ToolMessage: Tool 실행 결과
+            #
+            # 이 정보를 바탕으로 최종 답변을 작성합니다
+            print("  ✍️  최종 답변 생성 중...", end=" ", flush=True)
+            final_response = llm_with_tools.invoke(messages)
+            print("완료")
+            
+            answer = final_response.content
+        else:    # LLM이 tool 필요 없다고 판단
+            # Tool이 필요 없다고 판단한 경우입니다.
+            #
+            # 예:
+            #   "너는 어떤 역할이야?"
+            #   "이 시스템은 어떤 구조야?"
+            print("  ℹ️  Tool 불필요 — 직접 답변")
+            answer = response.content
 
+        # 답변 미리보기 출력
+        print(f"  ✅ 답변: {answer[:80]}...")
+        # 실행 이력을 scratchpad에 저장합니다.
+        self.scratchpad.append(
+            {
+                "query": query,
+                "tool_calls": [
+                    tc["name"]
+                    for tc in response.tool_calls
+                ] if response.tool_calls else [],
+                "answer": answer,
+            }
+        )
+        return answer
+    
 if __name__ == "__main__":
     # 테스트 데이터를 만들기 위해 random 모듈을 사용합니다.
     import random
