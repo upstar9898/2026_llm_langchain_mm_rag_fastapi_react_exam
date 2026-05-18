@@ -98,7 +98,22 @@ llm = ChatOpenAI(
     temperature=0,
 )
 
-tool_list = []
+# LLM에게 제공할 tool 목록
+
+tool_list = ["get_risk_summary", "count_objects_in_zone", "filter_danger_frames"]
+
+# LLM의 tool_calls에는 Tool 이름이 문자열로 들어옵니다.
+# 예:
+#   "name": "get_risk_summary"
+# 그러므로 Tool 이름으로 실제 Tool 객체를 빠르게 찾을 수 있도록
+# 딕셔너리를 만들어 둡니다.
+tools_map = {
+    t.name : t for t in tool_list
+}
+
+# LLM에 Tool 등록 : bind_tools()
+# bind_tools() : LLM에게 사용 가능한 Tool 목록을 알려주는 함수
+llm_with_tools = llm.bind_tools(tool_list)
 
 # ─────────────────────────────────────────────────────────────
 # 2. Tool 함수 정의
@@ -155,11 +170,13 @@ def get_risk_summary(results_json: str) -> str:
     # ensure_ascii=False를 사용해야 한글이 깨지지 않습니다.
     return json.dumps(
         {
-            **counts, # 딕셔너리에 들어있는 item을 풀어서 넣어줌
+            **counts,  # 딕셔너리에 들어있는 item을 풀어서 넣어줌
             "위험_프레임_ids": danger_ids,
         },
         ensure_ascii=False,
     )
+
+
 @tool
 def count_objects_in_zone(frames_json: str, zone: str) -> str:
     """
@@ -175,15 +192,9 @@ def count_objects_in_zone(frames_json: str, zone: str) -> str:
     # JSON 문자열을 Python 리스트로 변환합니다.
     data = json.loads(frames_json)
     # 사용자가 요청한 구역과 location이 같은 프레임만 모읍니다.
-    zone_frames = [
-        f for f in data
-        if f["location"] == zone
-    ]
+    zone_frames = [f for f in data if f["location"] == zone]
     # 해당 구역 프레임들에서 탐지된 객체 수를 모두 더합니다.
-    total = sum(
-        len(f["detections"])
-        for f in zone_frames
-    )
+    total = sum(len(f["detections"]) for f in zone_frames)
     # 프레임당 평균 탐지 수를 계산합니다.
     # zone_frames가 비어 있으면 0으로 나누는 오류를 막기 위해 0을 반환합니다.
     avg = round(total / len(zone_frames), 1) if zone_frames else 0
@@ -197,6 +208,8 @@ def count_objects_in_zone(frames_json: str, zone: str) -> str:
         },
         ensure_ascii=False,
     )
+
+
 @tool
 def filter_danger_frames(results_json: str) -> str:
     """
@@ -207,9 +220,6 @@ def filter_danger_frames(results_json: str) -> str:
     Returns:
         위험 등급 프레임 목록 JSON 문자열
     """
-    # 중요 수정 포인트:
-    #   위험도는 frames_json이 아니라 results_json 안에 있습니다.
-    #
     # frames_json:
     #   location, detections, bbox 중심 데이터
     #
@@ -219,10 +229,7 @@ def filter_danger_frames(results_json: str) -> str:
     # 따라서 위험 프레임을 필터링할 때는 results_json을 받아야 합니다.
     data = json.loads(results_json)
     # risk_level이 "위험"인 프레임만 추립니다.
-    danger = [
-        r for r in data
-        if r.get("risk_level") == "위험"
-    ]
+    danger = [r for r in data if r.get("risk_level") == "위험"]
     # 위험 프레임 목록을 JSON 문자열로 반환합니다.
     return json.dumps(
         danger,
@@ -334,7 +341,6 @@ Tool 선택 기준:
         #   이 단계에서 Tool이 실제 실행된 것은 아닙니다.
         print("  💭 LLM 판단 중...", end=" ", flush=True)
         response = llm_with_tools.invoke(messages)
-
         print("완료")
         
 
