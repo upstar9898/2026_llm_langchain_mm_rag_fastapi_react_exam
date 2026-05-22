@@ -1,5 +1,6 @@
 # 탐지 로그 텍스트를 OpenAI Embedding으로 벡터화하고
 # 코사인 유사도를 직접 계산해서 비슷한 상황을 찾습니다.
+# RAG가 어떻게 자연어로 유사도 검색을 할 수 있을지에 대한 동작 방식 예제
 
 import numpy as np
 from dotenv import load_dotenv
@@ -55,7 +56,8 @@ log_texts = [
 ]
 
 # ─── 현재 상황 쿼리 ──────────────────────────────────────────
-query = "새벽 창고 침입 의심. person:2 탐지."
+# query = "새벽 창고 침입 의심. person:2 탐지."
+query = "주차장에 온 정상 이용객이 몇 명이야?"
 
 print(f"🔍 현재 상황: {query}\n")
 print("📡 OpenAI Embedding API 호출 중...")
