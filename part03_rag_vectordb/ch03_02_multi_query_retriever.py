@@ -54,7 +54,7 @@ base_retriever = vectorstore.as_retriever(search_kwargs={"k": 2})
 # temperature=0.3: 약간의 창의성으로 다양한 표현 생성
 # ───────────────────────────────────────────────────────────
 
-llm = ChatOpenAI(model="gpt-4o", temperature=0.3)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
 
 # 기본 설정으로 로그를 남길 수 있는 로거객체를 가져와 langchain_classic.retriever.multi_query의 이름으로 하고, 기본 로그레벨을 logging.INFO 레벨로 지정
 logging.basicConfig(
@@ -92,3 +92,74 @@ print(f"\n✅ 기본: {len(basic_docs)}개 → MultiQuery: {len(multi_docs)}개"
 
 
 # multi_retriever로 검색된 다양한 응답의 내용을 랭체인을 이용하여 llm에게 주고, 종합적인 응답을 받도록 한다
+
+from langchain_core.documents import Document
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
+
+# ─────────────────────────────────────────────────────────────
+# LLM 종합 분석
+# multi_retriever로 검색된 다양한 문서들을 컨텍스트로 삼아
+# GPT-4o에게 현재 상황에 대한 종합 판단을 요청합니다.
+#
+# [흐름]
+# multi_docs (검색 결과) → format_docs() → 텍스트로 합치기
+#                                               ↓
+#                          PromptTemplate → {context} + {question}
+#                                               ↓
+#                                           ChatOpenAI (GPT-4o)
+#                                               ↓
+#                                         StrOutputParser → 문자열
+# ─────────────────────────────────────────────────────────────
+print("\n" + "=" * 60)
+print("🤖 MultiQuery 검색 결과 → GPT-4o 종합 분석")
+print("=" * 60)
+
+
+def format_docs(docs: List[Document]) -> str:
+    """
+    검색된 Document 리스트를 프롬프트에 넣을 텍스트로 변환합니다.
+    번호를 붙여서 GPT-4o가 각 사례를 구분하기 쉽게 합니다.
+    """
+    return "\n\n".join(
+        f"[사례 {i}] {doc.page_content}" for i, doc in enumerate(docs, 1)
+    )
+
+
+# 프롬프트 정의
+# {context}: format_docs()로 만든 검색 결과 텍스트
+# {question}: 현재 탐지 상황 (원래 쿼리)
+prompt = PromptTemplate.from_template(
+    """당신은 CCTV 보안 분석 전문가입니다.
+아래 검색된 과거 탐지 사례들을 종합하여 현재 상황에 대한 분석과 대응 방안을 제시하세요.
+ 
+[검색된 유사 사례]
+{context}
+ 
+[현재 탐지 상황]
+{question}
+ 
+위험도(정상/주의/위험), 판단 근거, 권장 조치사항을 구체적으로 답변하세요."""
+)
+
+# LCEL 체인 구성
+# multi_docs는 이미 검색이 끝난 상태이므로
+# Retriever를 체인에 연결하는 대신 format_docs()로 직접 변환해서 넣습니다.
+analysis_chain = prompt | llm | StrOutputParser()
+
+# 검색 결과를 컨텍스트로 변환 후 LLM 호출
+context_text = format_docs(multi_docs)
+
+print(f"\n📋 컨텍스트로 사용할 사례 수: {len(multi_docs)}개")
+print(f"🔍 분석 대상 상황: {query}\n")
+
+answer = analysis_chain.invoke(
+    {
+        "context": context_text,  # MultiQuery로 검색된 다양한 사례들
+        "question": query,  # 현재 탐지 상황
+    }
+)
+
+print("📊 GPT-4o 종합 분석 결과:")
+print(answer)
