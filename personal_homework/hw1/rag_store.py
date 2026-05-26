@@ -91,6 +91,7 @@ def load_vectorstore(
 def add_transcript_to_vectorstore(
     transcript: Dict[str, Any],
     topic: str,
+    summary: str,
     persist_directory: str = "./chroma_whisper_db",
     collection_name: str = "whisper_transcripts",
     embedding_model: str = "text-embedding-3-small",
@@ -102,6 +103,7 @@ def add_transcript_to_vectorstore(
     document = create_transcript_document(
         transcript=transcript,
         topic=topic,
+        summary=summary,
     )
 
     vectorstore = load_vectorstore(
