@@ -1,0 +1,26 @@
+=== 화자별 대화 전사 ===
+
+[주완 (Unit 3)] (0.0s ~ 41.0s)
+All units be advised. We have a suspicious individual detected near the East parking structure, level B2. Subject appears to be male, approximately mid-30s wearing a black hoodie, dark jeans, and carrying a large backpack. CCTV camera E12 first detected the subject, loitering near the restricted access door at approximately 22-14 hours. Copy that, control. Unit 3 is moving toward the East parking structure now, 8-2 minutes.  Subject is now looking around repeatedly and appears nervous.
+
+[민욱 (Control)] (41.0s ~ 48.0s)
+Control, this is Unit 5. We are monitoring from the North-Stairwell exit. No visual contact yet.
+
+[주완 (Unit 3)] (48.0s ~ 59.0s)
+Understood. Camera E15 now shows the subject walking toward the elevator lobby. Subject stopped briefly near a fire equipment cabinet. No signs of forced entry at this time.
+
+[민욱 (Control)] (59.0s ~ 69.0s)
+Control? Unit 3 has visual contact. Subject is standing near elevator 4, checking mobile phone repeatedly. We are maintaining observation distance.
+
+[주완 (Unit 3)] (69.0s ~ 80.0s)
+Copy, Unit 3. Proceed with caution. Do not engage alone until backup arrives. Unit 2 arriving at level B2 from the South Vehicle entrance.
+
+[UNKNOWN] (80.0s ~ 89.0s)
+All responding units use Channel 2 for tactical communication. Subject is moving again. Walking westbound toward the loading dock corridor.
+
+[주완 (Unit 3)] (89.0s ~ 114.0s)
+We are approaching from the opposite side, attempting to contain movement. Attention all units. Thermal camera at dock corridor D7 indicates possible second individual near the emergency exit door. Repeat, possible second subject detected.  Unit 5 moving to intercept second subject. Second subject appears to be acting as lookout, wearing grey cap and dark jacket. Camera visibility partially obstructed.
+
+[민욱 (Control)] (114.0s ~ 121.0s)
+Primary subject notice our presence. Subject is increasing locking speed.
+
