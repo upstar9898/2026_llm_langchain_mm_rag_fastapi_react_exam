@@ -92,14 +92,15 @@ def json_parse(text: str) -> dict:
     return json.loads(text.strip())
 
 
-# ── 실행 ──────────────────────────────────────────────────────
-prompt = """이 이미지를 분석해서 아래 JSON 형식으로만 응답하세요.
-{
-  "subject": "이미지의 주요 피사체",
-  "description": "전체적인 설명 (2~3문장)",
-  "mood": "이미지의 분위기",
-  "colors": ["주요 색상1", "주요 색상2"]
-}"""
+if __name__ == "__main__":
+    # ── 실행 ──────────────────────────────────────────────────────
+    prompt = """이 이미지를 분석해서 아래 JSON 형식으로만 응답하세요.
+    {
+    "subject": "이미지의 주요 피사체",
+    "description": "전체적인 설명 (2~3문장)",
+    "mood": "이미지의 분위기",
+    "colors": ["주요 색상1", "주요 색상2"]
+    }"""
 
-# result = analyze_image("./vision_sample/ichika.webp", prompt)
-# print(json.dumps(result, ensure_ascii=False, indent=2))
+    result = analyze_image("./vision_sample/ichika.webp", prompt)
+    print(json.dumps(result, ensure_ascii=False, indent=2))

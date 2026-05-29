@@ -42,14 +42,15 @@ def base64_to_image(b64: str, save_path: str) -> None:
     out_path.write_bytes(image_bytes)  # bytes -> file write
 
 
-b64, mt = image_to_base64("./vision_sample/cat.jpeg")
+if __name__ == "__main__":
+    b64, mt = image_to_base64("./vision_sample/cat.jpeg")
 
-print(f"media_type : {mt}")
-print(f"Base64 길이: {len(b64)} 문자")
-print(f"앞 30자    : {b64[:30]}...")
-print(f"data URI   : data:{mt};base64,{b64[:20]}...")
+    print(f"media_type : {mt}")
+    print(f"Base64 길이: {len(b64)} 문자")
+    print(f"앞 30자    : {b64[:30]}...")
+    print(f"data URI   : data:{mt};base64,{b64[:20]}...")
 
-# b64에 들어있는 base64를 디코딩하여 "./vision_sample/decode_exam.jpeg"로 저장하는 함수를 만드세요
-# base64_to_image(b64, file_path)
+    # b64에 들어있는 base64를 디코딩하여 "./vision_sample/decode_exam.jpeg"로 저장하는 함수를 만드세요
+    # base64_to_image(b64, file_path)
 
-base64_to_image(b64, "./vision_sample/decode_exam.jpeg")
+    base64_to_image(b64, "./vision_sample/decode_exam.jpeg")
