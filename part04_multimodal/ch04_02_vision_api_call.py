@@ -101,5 +101,5 @@ prompt = """이 이미지를 분석해서 아래 JSON 형식으로만 응답하�
   "colors": ["주요 색상1", "주요 색상2"]
 }"""
 
-result = analyze_image("./vision_sample/ichika.webp", prompt)
-print(json.dumps(result, ensure_ascii=False, indent=2))
+# result = analyze_image("./vision_sample/ichika.webp", prompt)
+# print(json.dumps(result, ensure_ascii=False, indent=2))
